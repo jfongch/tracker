@@ -12,32 +12,46 @@ import CoreData
 struct ContentView: View {
     @State private var showingWizard = false
 
-
     var body: some View {
-        if showingWizard {
-            WizardView()
-        } else {
-            HomeScreenView()
+        NavigationView {
+            if showingWizard {
+                ZStack(alignment: .bottom) {
+                    WizardView()
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: toggleShowingWizard) {
+                            Text("Cancel")
+                                .foregroundColor(Color.red)
+                        }
+                    }
+                }
+            } else {
+                ZStack(alignment: .bottom) {
+                    HomeScreenView()
+                }
                 .toolbar {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         EditButton()
                     }
-                    ToolbarItem {
+                    ToolbarItem(placement: .navigationBarTrailing) {
                         Button(action: toggleShowingWizard) {
                             Label("Add Item", systemImage: "plus")
-                            
                         }
                     }
                 }
+            }
         }
-        
     }
     
     private func toggleShowingWizard() {
+        let _ = print(showingWizard)
         showingWizard = !showingWizard
+        let _ = print(showingWizard)
     }
     
 }
+
 
 struct WizardView: View {
     @Environment(\.managedObjectContext) private var viewContext
@@ -46,7 +60,6 @@ struct WizardView: View {
     @State var startDate: Date = Date()
 
     var body: some View {
-
         Form {
             Section(header: Text("PROFILE")) {
                 TextField("What're we tracking?", text: $name)
@@ -71,39 +84,25 @@ struct HomeScreenView: View {
     private var items: FetchedResults<Item>
 
     var body: some View {
-        NavigationView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text(item.icon ?? "🐣")
-                        Text(item.name ?? "New Item")
-                        Text(getItemTypeString(item: item))
-                        Text("Item size is \(item.itemSize?.amount ?? 1) \(item.itemSize?.sizeUnit ?? "L")")
+        List {
+            ForEach(items) { item in
+                NavigationLink {
+                    Text(item.icon ?? "🐣")
+                    Text(item.name ?? "New Item")
+                    Text(getItemTypeString(item: item))
+                    Text("Item size is \(item.itemSize?.amount ?? 1) \(item.itemSize?.sizeUnit ?? "L")")
 
-                        if (item.tracking?.estimatedEndDate != nil) {
-                            Text("There are \(numberOfDaysBetween(Date(), and: (item.tracking?.estimatedEndDate)!)) \(item.tracking?.timeUnit ?? "days") remaining")
-                        } else {
-                            Text("You started using this item on \(item.tracking?.startDate ?? Date(), formatter: itemFormatter)")
-                        }
-                    
-                    } label: {
-                        Text("\(item.name!), 1 day remaining")
+                    if (item.tracking?.estimatedEndDate != nil) {
+                        Text("There are \(numberOfDaysBetween(Date(), and: (item.tracking?.estimatedEndDate)!)) \(item.tracking?.timeUnit ?? "days") remaining")
+                    } else {
+                        Text("You started using this item on \(item.tracking?.startDate ?? Date(), formatter: itemFormatter)")
                     }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                        
-                    }
+                
+                } label: {
+                    Text("\(item.name!), 1 day remaining")
                 }
             }
-            Text("Select an item")
+            .onDelete(perform: deleteItems)
         }
     }
     
